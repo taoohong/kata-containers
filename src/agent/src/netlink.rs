@@ -67,8 +67,13 @@ impl Handle {
         // target link. filter using name or family is supported, but
         // we cannot use that to find target link.
         // let's try if hardware address filter works. -_-
-        let link = self.find_link(LinkFilter::Address(&iface.hwAddr)).await?;
-
+        let link = match self.find_link(LinkFilter::Address(&iface.hwAddr)).await{
+            Ok(info) => info,
+            Err(_) => {
+                self.find_link(LinkFilter::Name(&iface.name.as_str()))
+                    .await?
+            },
+        };
         // Bring down interface if it is UP
         if link.is_up() {
             self.enable_link(link.index(), false).await?;
